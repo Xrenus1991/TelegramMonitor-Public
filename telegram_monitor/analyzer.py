@@ -12,6 +12,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 
+from telegram_monitor.mixed_script import mixed_latin_cyrillic_tokens
+
 from telegram_monitor.ai_providers import (
     analyze_openai, captions_openai, mask_contacts, provider_name,
     should_redact_contacts,
@@ -230,6 +232,7 @@ class MessageAnalyzer:
                 "media_type": str(msg.media_type or ""),
                 "media_size_kb": int(msg.media_size_kb or 0),
                 "content": content,
+                "mixed_script_tokens": mixed_latin_cyrillic_tokens(content),
             }, ensure_ascii=False))
         topics_str = ", ".join(self.topics)
         prompt = ANALYSIS_PROMPT_TEMPLATE.format(
