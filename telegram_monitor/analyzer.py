@@ -245,11 +245,13 @@ class MessageAnalyzer:
             stamp = msg.timestamp
             if stamp.tzinfo is None:
                 stamp = stamp.replace(tzinfo=timezone.utc)
+            raw_message_id = getattr(msg, "message_id", None)
+            prompt_message_id = (raw_message_id if type(raw_message_id) is int
+                                 else str(raw_message_id or "")[:64])
             msg_lines.append(json.dumps({
                 "time_utc": stamp.astimezone(timezone.utc).isoformat(),
                 "source": source_name,
-                "message_id": (getattr(msg, "message_id", None) if type(getattr(msg, "message_id", None)) is int
-                               else str(getattr(msg, "message_id", "") or "")[:64]),
+                "message_id": prompt_message_id,
                 "media_type": "".join(" " if ord(ch) < 32 or ord(ch) == 127 else ch
                                       for ch in str(msg.media_type or "")[:80]),
                 "media_size_kb": (int(msg.media_size_kb or 0) if len(str(msg.media_size_kb or "0")) <= 12 and str(msg.media_size_kb or "0").isascii() and str(msg.media_size_kb or "0").isdecimal()
