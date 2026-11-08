@@ -46,10 +46,9 @@ def mixed_latin_cyrillic_tokens(text: str) -> list[str]:
 
     for char in text:
         category = unicodedata.category(char)
-        if char.isalpha() or (chars and category.startswith(("M", "Cf"))) or (category == "Cf" and not chars):
-            # Keep leading invisible format characters with the following
-            # word, rather than losing evidence when the token starts.
-
+        if char.isalpha() or category.startswith("M") or category == "Cf":
+            # Keep leading combining marks and invisible format characters
+            # with the following word; neither establishes script membership.
             # Invisible format characters (e.g. zero-width joiners) can be
             # inserted to hide script mixing. Preserve them in the reported
             # token, but never let them establish script membership.
