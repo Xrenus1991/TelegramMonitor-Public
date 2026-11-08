@@ -169,14 +169,14 @@ class MessageAnalyzer:
         """
         if not messages:
             return None
-        # Read on every call so operators can disable AI without rebuilding.
-        # The collector/storage pipeline remains unaffected by this gate.
-        if os.getenv("AI_PROCESSING_ENABLED", "true").strip().lower() in ("0", "false", "no", "off"):
-            logger.info("[analyze_batch] AI processing disabled by AI_PROCESSING_ENABLED")
-            self._partial_batch_key = None
-            self._partial_parts = []
-            return None
         async with self._lock:
+            # Read on every call so operators can disable AI without rebuilding.
+            # The collector/storage pipeline remains unaffected by this gate.
+            if os.getenv("AI_PROCESSING_ENABLED", "true").strip().lower() in ("0", "false", "no", "off"):
+                logger.info("[analyze_batch] AI processing disabled by AI_PROCESSING_ENABLED")
+                self._partial_batch_key = None
+                self._partial_parts = []
+                return None
             try:
                 chunks = self._split_into_chunks(messages)
                 signature = self._retry_signature(messages)
