@@ -31,6 +31,19 @@ def test_combining_marks_preserved():
     assert mixed_latin_cyrillic_tokens("аe\u0301") == ["аe\u0301"]
 
 
+@pytest.mark.parametrize("text", [
+    "прив​eт",  # zero-width space
+    "прив‍eт",  # zero-width joiner
+    "прив⁠eт",  # word joiner
+])
+def test_invisible_format_characters_do_not_hide_mixed_script(text):
+    assert mixed_latin_cyrillic_tokens(text) == [text]
+
+
+def test_invisible_format_characters_alone_are_not_suspicious():
+    assert mixed_latin_cyrillic_tokens("прив​ет") == []
+
+
 def test_invalid_input_rejected():
     with pytest.raises(TypeError):
         mixed_latin_cyrillic_tokens(None)
