@@ -29,11 +29,17 @@ def mixed_latin_cyrillic_tokens(text: str) -> list[str]:
         for char in token:
             if not char.isalpha():
                 continue
-            name = unicodedata.name(char, "")
-            if name.startswith("LATIN "):
-                scripts.add("latin")
-            elif name.startswith("CYRILLIC "):
-                scripts.add("cyrillic")
+            # Compatibility-styled Latin letters (e.g. mathematical bold)
+            # retain their original form in evidence but must still count
+            # as Latin for the mixed-script review signal.
+            for normalized in unicodedata.normalize("NFKC", char):
+                if not normalized.isalpha():
+                    continue
+                name = unicodedata.name(normalized, "")
+                if name.startswith("LATIN "):
+                    scripts.add("latin")
+                elif name.startswith("CYRILLIC "):
+                    scripts.add("cyrillic")
         if len(scripts) == 2 and token not in seen:
             seen.add(token)
             found.append(token)
