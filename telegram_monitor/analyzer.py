@@ -172,7 +172,7 @@ class MessageAnalyzer:
         async with self._lock:
             # Read on every call so operators can disable AI without rebuilding.
             # The collector/storage pipeline remains unaffected by this gate.
-            if os.getenv("AI_PROCESSING_ENABLED", "true").strip().lower() in ("0", "false", "no", "off"):
+            if os.getenv("AI_PROCESSING_ENABLED", "true").strip().lower() not in ("1", "true", "yes", "on"):
                 logger.info("[analyze_batch] AI processing disabled by AI_PROCESSING_ENABLED")
                 self._partial_batch_key = None
                 self._partial_parts = []
@@ -190,7 +190,7 @@ class MessageAnalyzer:
             for idx in range(len(parts), len(chunks)):
                 # Operators may disable AI while a multi-chunk batch is running.
                 # Do not start another provider request after the switch is off.
-                if os.getenv("AI_PROCESSING_ENABLED", "true").strip().lower() in ("0", "false", "no", "off"):
+                if os.getenv("AI_PROCESSING_ENABLED", "true").strip().lower() not in ("1", "true", "yes", "on"):
                     self._partial_batch_key = None
                     self._partial_parts = []
                     logger.info("[analyze_batch] AI disabled during batch; remaining chunks skipped")
