@@ -149,7 +149,7 @@ def mask_contacts(text: str) -> str:
 
     Not complete anonymization: channels, context and names can remain identifying.
     """
-    text = re.sub(r"\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b", "[EMAIL_СКРЫТ]", text)
+    text = re.sub(r"\b[\w.+-]+@[\w.-]+\.[^\W\d_]{2,}\b", "[EMAIL_СКРЫТ]", text)
     text = re.sub(r"(?<!\w)(?!\d{4}[-/.]\d{1,2}[-/.]\d{1,2}\b)(?:\+?\d[\d\s().-]{7,}\d)(?!\w)", "[ТЕЛЕФОН_СКРЫТ]", text)
     return text
 
