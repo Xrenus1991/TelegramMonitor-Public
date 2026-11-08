@@ -230,7 +230,9 @@ class MessageAnalyzer:
             if len(original) > cap:
                 content += f" [ТЕКСТ ОБРЕЗАН: показано {cap} из {len(original)} символов]"
                 logger.warning("AI prompt truncates message text from %d to %d characters", len(original), cap)
-            source_name = str(msg.channel_name).replace("\n", " ").replace("\r", " ")
+            # Channel names are untrusted input; bound prompt growth and remove control characters.
+            source_name = "".join(" " if ord(ch) < 32 or ord(ch) == 127 else ch
+                                  for ch in str(msg.channel_name))[:200]
             if provider == "openai" and should_redact_contacts():
                 content = mask_contacts(content)
                 source_name = mask_contacts(source_name)
