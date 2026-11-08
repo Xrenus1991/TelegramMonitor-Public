@@ -188,6 +188,13 @@ class MessageAnalyzer:
                 self._partial_parts = []
             parts = list(self._partial_parts)
             for idx in range(len(parts), len(chunks)):
+                # Operators may disable AI while a multi-chunk batch is running.
+                # Do not start another provider request after the switch is off.
+                if os.getenv("AI_PROCESSING_ENABLED", "true").strip().lower() in ("0", "false", "no", "off"):
+                    self._partial_batch_key = None
+                    self._partial_parts = []
+                    logger.info("[analyze_batch] AI disabled during batch; remaining chunks skipped")
+                    return None
                 chunk = chunks[idx]
                 logger.info("[analyze_batch] chunk %d/%d: %d messages", idx + 1, len(chunks), len(chunk))
                 part = await self._analyze_one_chunk(chunk)
