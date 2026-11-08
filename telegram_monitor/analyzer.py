@@ -248,7 +248,8 @@ class MessageAnalyzer:
                 "time_utc": stamp.astimezone(timezone.utc).isoformat(),
                 "source": source_name,
                 "message_id": getattr(msg, "message_id", None),
-                "media_type": str(msg.media_type or ""),
+                "media_type": "".join(" " if ord(ch) < 32 or ord(ch) == 127 else ch
+                                      for ch in str(msg.media_type or ""))[:80],
                 "media_size_kb": int(msg.media_size_kb or 0),
                 "content": content,
                 # Signals are supplemental metadata: bound their total size,
