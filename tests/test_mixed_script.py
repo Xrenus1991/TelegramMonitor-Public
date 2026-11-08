@@ -57,3 +57,16 @@ def test_invalid_input_rejected():
 ])
 def test_compatibility_styled_latin_letters(text, expected):
     assert mixed_latin_cyrillic_tokens(text) == expected
+
+
+@pytest.mark.parametrize("text", [
+    "\u200bпривeт",
+    "\u2060привeт",
+    "\u200dпривeт",
+])
+def test_leading_invisible_format_character_is_preserved(text):
+    assert mixed_latin_cyrillic_tokens(text) == [text]
+
+
+def test_leading_invisible_format_character_not_a_signal_by_itself():
+    assert mixed_latin_cyrillic_tokens("\u200bпривет") == []
