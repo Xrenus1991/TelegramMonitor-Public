@@ -248,7 +248,7 @@ class MessageAnalyzer:
             msg_lines.append(json.dumps({
                 "time_utc": stamp.astimezone(timezone.utc).isoformat(),
                 "source": source_name,
-                "message_id": (getattr(msg, "message_id", None) if isinstance(getattr(msg, "message_id", None), int)
+                "message_id": (getattr(msg, "message_id", None) if type(getattr(msg, "message_id", None)) is int
                                else str(getattr(msg, "message_id", "") or "")[:64]),
                 "media_type": "".join(" " if ord(ch) < 32 or ord(ch) == 127 else ch
                                       for ch in str(msg.media_type or "")[:80]),
