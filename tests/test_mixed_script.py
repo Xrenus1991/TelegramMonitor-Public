@@ -70,3 +70,15 @@ def test_leading_invisible_format_character_is_preserved(text):
 
 def test_leading_invisible_format_character_not_a_signal_by_itself():
     assert mixed_latin_cyrillic_tokens("\u200bпривет") == []
+
+
+@pytest.mark.parametrize("text", [
+    "\u0301привeт",
+    "\u034fпривeт",
+])
+def test_leading_combining_marks_preserved(text):
+    assert mixed_latin_cyrillic_tokens(text) == [text]
+
+
+def test_leading_combining_mark_not_a_signal_by_itself():
+    assert mixed_latin_cyrillic_tokens("\u0301привет") == []
