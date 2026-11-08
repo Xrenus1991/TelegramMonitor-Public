@@ -223,6 +223,7 @@ class MessageAnalyzer:
         max_message_chars = int(os.environ.get("AI_MAX_MESSAGE_CHARS", "4000"))
         chunk_budget = int(os.environ.get("AI_MAX_CHARS_PER_CHUNK", "16000" if provider == "openai" else "6000"))
         cap = min(max_message_chars, max(200, chunk_budget - 300))
+        redact_contacts = provider == "openai" and should_redact_contacts()
         for msg in messages:
             counts[msg.channel_name] = counts.get(msg.channel_name, 0) + 1
             original = str(msg.text or "")
@@ -233,7 +234,7 @@ class MessageAnalyzer:
             # Channel names are untrusted input; bound prompt growth and remove control characters.
             source_name = "".join(" " if ord(ch) < 32 or ord(ch) == 127 else ch
                                   for ch in str(msg.channel_name)[:200])
-            if provider == "openai" and should_redact_contacts():
+            if redact_contacts:
                 content = mask_contacts(content)
                 source_name = mask_contacts(source_name)
             # Detect script mixing only in the bounded, privacy-processed content.
