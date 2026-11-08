@@ -235,7 +235,9 @@ class MessageAnalyzer:
                 "media_type": str(msg.media_type or ""),
                 "media_size_kb": int(msg.media_size_kb or 0),
                 "content": content,
-                "mixed_script_tokens": mixed_tokens[:8],
+                # Signals are supplemental metadata: bound their total size,
+                # even when a single suspicious token is thousands of chars.
+                "mixed_script_tokens": [token[:80] for token in mixed_tokens[:8]],
             }, ensure_ascii=False))
         topics_str = ", ".join(self.topics)
         prompt = ANALYSIS_PROMPT_TEMPLATE.format(
