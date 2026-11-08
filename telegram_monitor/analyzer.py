@@ -12,6 +12,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 
+from telegram_monitor.mixed_script import mixed_latin_cyrillic_tokens
+
 from telegram_monitor.ai_providers import (
     analyze_openai, captions_openai, mask_contacts, provider_name,
     should_redact_contacts,
@@ -218,6 +220,9 @@ class MessageAnalyzer:
             if provider == "openai" and should_redact_contacts():
                 content = mask_contacts(content)
                 source_name = mask_contacts(source_name)
+            # Detect script mixing only in the bounded, privacy-processed content.
+            # A signal is not a verdict; preserve the exact text for the model.
+            mixed_tokens = mixed_latin_cyrillic_tokens(content)
             # Encode source messages as data, not Markdown-like instructions.
             # Full UTC date and source message ID make timeline claims traceable.
             stamp = msg.timestamp
@@ -230,6 +235,7 @@ class MessageAnalyzer:
                 "media_type": str(msg.media_type or ""),
                 "media_size_kb": int(msg.media_size_kb or 0),
                 "content": content,
+                "mixed_script_tokens": mixed_tokens[:8],
             }, ensure_ascii=False))
         topics_str = ", ".join(self.topics)
         prompt = ANALYSIS_PROMPT_TEMPLATE.format(
