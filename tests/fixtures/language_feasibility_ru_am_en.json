@@ -1,0 +1,67 @@
+[
+  {
+    "id": "ru-long",
+    "text": "Сегодня опубликовано новое сообщение о работе городского транспорта.",
+    "expected": "ru"
+  },
+  {
+    "id": "ru-short",
+    "text": "Доброе утро, как ваши дела?",
+    "expected": "ru"
+  },
+  {
+    "id": "ru-news",
+    "text": "В Ереване открылась новая выставка.",
+    "expected": "ru"
+  },
+  {
+    "id": "hy-long",
+    "text": "Այսօր Երևանում բացվել է նոր ցուցահանդես։",
+    "expected": "hy"
+  },
+  {
+    "id": "hy-short",
+    "text": "Բարև ձեզ, ինչպես եք։",
+    "expected": "hy"
+  },
+  {
+    "id": "hy-news",
+    "text": "Հայաստանում այսօր արևոտ եղանակ է։",
+    "expected": "hy"
+  },
+  {
+    "id": "en-long",
+    "text": "The city published a new public transport schedule today.",
+    "expected": "en"
+  },
+  {
+    "id": "en-short",
+    "text": "Good morning, how are you?",
+    "expected": "en"
+  },
+  {
+    "id": "en-news",
+    "text": "A new exhibition opened in the city today.",
+    "expected": "en"
+  },
+  {
+    "id": "numeric",
+    "text": "123456 2026-11-06",
+    "expected": null
+  },
+  {
+    "id": "ambiguous",
+    "text": "OK",
+    "expected": null
+  },
+  {
+    "id": "mixed",
+    "text": "Привет աշխարհ hello",
+    "expected": null
+  },
+  {
+    "id": "url-only",
+    "text": "https://example.com",
+    "expected": null
+  }
+]

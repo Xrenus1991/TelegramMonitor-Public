@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Telegram Monitor — v8.1</title>
+  <style>
+    :root{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#edf3fb;background:#0a101c;font-synthesis:none}
+    *{box-sizing:border-box}body{margin:0;line-height:1.5;background:radial-gradient(ellipse at 80% -25%,#23415d 0%,transparent 50%),#0a101c}
+    .shell{max-width:1280px;padding:35px 26px 65px;margin:auto}
+    .header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:22px}
+    .eyebrow{color:#8facd1;text-transform:uppercase;letter-spacing:.2em;font-size:.72rem;font-weight:700}
+    h1{font-size:clamp(1.7rem,3.5vw,2.6rem);line-height:1.18;margin:5px 0 9px;letter-spacing:-.04em}
+    h2{font-size:1.16rem;margin:0}p{margin:.4rem 0}.muted{color:#9aaec5}.caution{font-size:.86rem;color:#a8b9ca}
+    .badge{display:inline-flex;align-items:center;gap:8px;border:1px solid #3c5268;border-radius:999px;padding:7px 11px;color:#bbd9f3;font-size:.8rem}
+    .dot{width:7px;height:7px;background:#63d4aa;border-radius:50%}
+    .stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:24px 0}
+    .stat{padding:19px;background:linear-gradient(130deg,#192c42,#111e2e);border:1px solid #273b51;border-radius:16px;min-width:0}
+    .stat strong{display:block;font-size:clamp(1.25rem,2.4vw,2rem);letter-spacing:-.035em;overflow-wrap:anywhere;margin:7px 0 0}
+    .stat small{color:#a2b8d0;font-size:.82rem}.stat .hint{font-size:.72rem;color:#748fa8;margin-top:4px}
+    .panel{background:#111e2d;border:1px solid #2a4057;border-radius:17px;padding:21px;margin:0 0 20px}
+    .panel-top{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:15px}
+    .filters{display:grid;grid-template-columns:minmax(150px,2fr) repeat(3,minmax(130px,1fr)) repeat(2,minmax(145px,1fr));gap:10px}
+    .field{display:flex;flex-direction:column;gap:6px;min-width:0}.field span{font-size:.75rem;font-weight:650;color:#aabed3}
+    input,select,button{font:inherit}input,select{width:100%;min-width:0;color:#f2f7fd;border:1px solid #395169;background:#0b1726;border-radius:9px;padding:10px 11px;outline-offset:3px}
+    input:focus,select:focus{border-color:#63b6e8}input::placeholder{color:#738ba6}
+    button{border:1px solid #36536d;background:#1d354f;color:#f3f8ff;border-radius:10px;padding:10px 16px;cursor:pointer;font-weight:650}
+    button:hover{background:#284462}button:disabled{opacity:.42;cursor:default}.primary{background:#3a91be;border-color:#4baddd;color:white}
+    .actions{display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end;margin-top:14px}
+    .line{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:20px 0 11px}
+    .count{color:#a7c2d9;font-size:.9rem}.event-list{display:grid;gap:12px}
+    .event{border:1px solid #293e54;border-radius:15px;background:#142337;padding:19px 20px}
+    .event-head{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;justify-content:space-between}
+    .event h3{font-size:1rem;margin:0;overflow-wrap:anywhere;font-weight:700}.when{font-size:.79rem;color:#91b3ce}
+    .summary{font-size:.96rem;margin:12px 0;color:#eff5fc;white-space:pre-wrap;overflow-wrap:anywhere}
+    .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+    .chip{border:1px solid #36546b;background:#172c41;border-radius:6px;font-size:.76rem;color:#bdcfe0;padding:5px 9px;overflow-wrap:anywhere}
+    .chip.high{background:#4f2630;color:#ffc4cc;border-color:#89434f}.chip.medium{background:#49371b;color:#ffe1a9;border-color:#826339}
+    .chip.low{background:#184036;color:#a7f2d7;border-color:#2d6b57}
+    .uncertainty{font-size:.82rem;color:#a6bad0;margin-top:12px;overflow-wrap:anywhere}
+    .deep{border-left:2px solid #50b0df;padding:7px 13px;margin-top:12px;color:#cfe1f1;font-size:.85rem;white-space:pre-wrap}
+    .pager{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:22px}.pager-label{color:#9fb9d3;font-size:.88rem}
+    .empty{border:1px dashed #3c5870;border-radius:14px;padding:36px;text-align:center;color:#a8bfd2}
+    .error{padding:13px 15px;color:#ffbcc7;background:#482633;border:1px solid #884454;border-radius:9px;margin:12px 0}
+    footer{margin-top:35px;padding-top:15px;border-top:1px solid #23374b;color:#7992aa;font-size:.8rem}
+    [hidden]{display:none!important}
+    @media(max-width:1120px){.filters{grid-template-columns:repeat(3,minmax(0,1fr))}.field:first-child{grid-column:span 2}}
+    @media(max-width:700px){.shell{padding:20px 14px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:repeat(2,minmax(0,1fr))}.field:first-child{grid-column:span 2}.panel{padding:15px}}
+    @media(max-width:440px){.filters{grid-template-columns:1fr}.field:first-child{grid-column:auto}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stat{padding:12px}}
+  </style>
+</head>
+<body>
+<main class="shell">
+  <header class="header"><div><div class="eyebrow">Аналитическая панель · защищённый доступ</div>
+    <h1>Telegram Monitor <span style="color:#71c7ee">v8.1</span></h1>
+    <p class="muted">Сводка по Telegram-источникам · события требуют независимой проверки</p></div>
+    <div class="badge"><span class="dot" aria-hidden="true"></span> Данные PostgreSQL · только чтение</div></header>
+  <section class="stats" aria-label="Статистика">
+    <div class="stat"><small>Всего сообщений</small><strong id="total">—</strong><div class="hint">Все состояния</div></div>
+    <div class="stat"><small>Проанализировано</small><strong id="done">—</strong><div class="hint">Статус done</div></div>
+    <div class="stat"><small>В очереди</small><strong id="pending">—</strong><div class="hint">Ожидают обработки</div></div>
+    <div class="stat"><small>В обработке</small><strong id="processing">—</strong><div class="hint">Активные задания</div></div>
+    <div class="stat"><small>Учёт API за месяц</small><strong id="spend">—</strong><div class="hint">Оценка или резерв · USD</div></div>
+  </section>
+  <section class="panel" aria-label="Диагностика данных">
+    <div class="panel-top"><h2>Состояние данных</h2><span class="caution">Показатели из PostgreSQL; не проверяют процессы Docker</span></div>
+    <div id="diagnostics" class="count" aria-live="polite">Загрузка диагностических показателей…</div>
+  </section>
+  <section class="panel" aria-label="Поиск и фильтры">
+    <div class="panel-top"><h2>Поиск событий</h2><span class="caution">По всей базе обработанных сообщений</span></div>
+    <form id="search-form">
+      <div class="filters">
+        <label class="field"><span>Поиск текста</span><input id="q" type="search" maxlength="200" placeholder="Фраза, слово, сообщение…" autocomplete="off"></label>
+        <label class="field"><span>Источник</span><select id="source"><option value="">Все каналы</option></select></label>
+        <label class="field"><span>Тема</span><select id="topic"><option value="">Все темы</option></select></label>
+        <label class="field"><span>Приоритет модели</span><select id="priority"><option value="">Любой</option><option value="high">Высокий</option><option value="medium">Средний</option><option value="low">Низкий</option></select></label>
+        <label class="field"><span>С даты</span><input id="since" type="datetime-local"></label>
+        <label class="field"><span>По дату</span><input id="until" type="datetime-local"></label>
+      </div><div class="actions"><button type="button" id="reset">Сбросить</button><button type="submit" class="primary">Найти</button><button type="button" id="refresh">Обновить</button></div>
+    </form>
+  </section>
+  <div id="error" class="error" role="alert" hidden></div>
+  <div class="line"><h2>Результаты анализа</h2><span id="result-count" class="count">Загрузка…</span></div>
+  <section class="event-list" id="events" aria-live="polite"></section>
+  <nav class="pager" aria-label="Навигация по результатам"><button id="prev" type="button">← Назад</button><span class="pager-label" id="page">Страница 1</span><button id="next" type="button">Вперёд →</button></nav>
+  <footer>Источники Telegram и выводы модели не являются самостоятельным доказательством фактов. Панель доступна только через SSH-туннель.</footer>
+</main>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const LIMIT = 25;
+let cursors = [''];
+let pageIndex = 0;
+let nextCursor = null;
+let lastTotal = 0;
+let latestRequest = 0;
+const number = value => Number(value || 0).toLocaleString('ru-RU');
+const text = (tag, value, cls) => {const node=document.createElement(tag);node.textContent=String(value ?? '');if(cls)node.className=cls;return node;};
+const errorMessage = msg => {$('error').textContent=msg;$('error').hidden=false;};
+const clearError = () => {$('error').hidden=true;};
+async function getJson(url){const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error(`Ошибка API (${r.status})`);return r.json();}
+function fillSelect(id,items){const el=$(id);const old=el.value;while(el.options.length>1)el.remove(1);
+ for(const item of items){const opt=document.createElement('option');opt.value=item;opt.textContent=item;el.add(opt);}el.value=[...el.options].some(o=>o.value===old)?old:'';}
+async function loadFilterOptions(){const data=await getJson('/api/filters');fillSelect('source',data.sources||[]);fillSelect('topic',data.topics||[]);}
+async function loadStats(){const d=await getJson('/api/stats');const m=d.messages||{};const total=Object.values(m).reduce((a,b)=>a+Number(b||0),0);
+ $('total').textContent=number(total);$('done').textContent=number(m.done);$('pending').textContent=number(m.pending);$('processing').textContent=number(m.processing);
+ $('spend').textContent='$'+Number(d.estimated_or_reserved_usd||0).toFixed(4);
+}
+function params(){const p=new URLSearchParams({limit:String(LIMIT)});if(cursors[pageIndex])p.set('cursor',cursors[pageIndex]);
+ for(const id of ['q','source','topic','priority']){const v=$(id).value.trim();if(v)p.set(id,v);}
+ for(const id of ['since','until']){const v=$(id).value;if(v){const d=new Date(v);if(Number.isNaN(d.getTime()))throw new Error('Некорректная дата');p.set(id,d.toISOString());}}
+ return p;
+}
+function priorityName(p){return ({high:'Высокий',medium:'Средний',low:'Низкий'})[p]||p;}
+function renderEvents(items){const root=$('events');root.replaceChildren();
+ if(!items.length){root.append(text('div','По заданным условиям обработанные сообщения не найдены.','empty'));return;}
+ for(const item of items){const c=item.classification||{};const card=text('article','','event');const head=text('div','','event-head');
+  head.append(text('h3',item.source||'Источник не указан'));
+  let date=item.timestamp||'—';try{date=new Date(item.timestamp).toLocaleString('ru-RU',{dateStyle:'medium',timeStyle:'short'});}catch(e){}
+  head.append(text('span',date,'when'));card.append(head);
+  card.append(text('p',c.summary_ru||'Описание отсутствует','summary'));
+  const tags=text('div','','meta');if(c.topic)tags.append(text('span',c.topic,'chip'));
+  if(c.priority)tags.append(text('span','Приоритет: '+priorityName(c.priority),'chip '+(['high','medium','low'].includes(c.priority)?c.priority:'')));
+  if(c.relevant===false)tags.append(text('span','Нерелевантно по оценке модели','chip'));
+  card.append(tags);
+  if(c.source_uncertainty)card.append(text('div','Проверка источника: '+c.source_uncertainty,'uncertainty'));
+  if(item.deep_analysis?.summary_ru)card.append(text('div','Углублённый анализ: '+item.deep_analysis.summary_ru,'deep'));
+  root.append(card);
+ }
+}
+async function loadEvents(){const req=++latestRequest;const result=await getJson('/api/events?'+params().toString());if(req!==latestRequest)return;
+ lastTotal=result.total;nextCursor=result.next_cursor||null;renderEvents(result.items||[]);
+ const from=result.items?.length?pageIndex*LIMIT+1:0;const to=pageIndex*LIMIT+(result.items||[]).length;
+ $('result-count').textContent=`Найдено ${number(lastTotal)} · показано ${number(from)}–${number(to)}`;
+ $('page').textContent=`Страница ${pageIndex+1}`;$('prev').disabled=pageIndex<=0;$('next').disabled=!result.has_more||!nextCursor;
+}
+async function loadDiagnostics(){const d=await getJson('/api/diagnostics');
+ const fmt=v=>v?new Date(v).toLocaleString('ru-RU'):'нет данных';
+ $('diagnostics').textContent=`Последняя запись в БД: ${fmt(d.last_stored_at)} · Сбоев обработки: ${number(d.failed_messages)} · Просроченных заданий: ${number(d.expired_processing_leases)} · Старейшее ожидание: ${fmt(d.oldest_pending_stored_at)}`;
+}
+async function reload({options=false}={}){clearError();try{const tasks=[loadStats(),loadEvents(),loadDiagnostics()];if(options)tasks.push(loadFilterOptions());await Promise.all(tasks);}catch(e){errorMessage(e.message||'Не удалось загрузить данные.');}}
+function resetPage(){pageIndex=0;cursors=[''];nextCursor=null;}
+$('search-form').addEventListener('submit',e=>{e.preventDefault();resetPage();reload();});
+$('reset').addEventListener('click',()=>{$('search-form').reset();resetPage();reload();});
+$('refresh').addEventListener('click',()=>reload({options:true}));
+$('prev').addEventListener('click',()=>{if(pageIndex>0){pageIndex--;reload();}});
+$('next').addEventListener('click',()=>{if(nextCursor){cursors=cursors.slice(0,pageIndex+1);cursors.push(nextCursor);pageIndex++;reload();}});
+reload({options:true});
+</script>
+</body></html>

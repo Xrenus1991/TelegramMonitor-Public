@@ -1,0 +1,51 @@
+# Local credentials and Telegram user sessions; never commit or share these.
+.env
+.env.*
+!.env.openai.example
+!.env.example
+*.session
+*.session-journal
+*.session-shm
+*.session-wal
+# Local messages, media, queued texts, SQLite and logs.
+data/
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-*
+*.log
+faulthandler.log
+# Python artifacts.
+.venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+.DS_Store
+
+# VPS/cloud secrets, backups, runtime DB and session materials
+/deploy/.env
+/deploy/secrets/
+/deploy/backups/
+*.session
+*.session-journal
+*.db
+
+# Keep live, regional and operator-created profiles out of Git.
+/configs/*.json
+!/configs/*.example.json
+!/tests/fixtures/test_config.json
+# Archived deployment credentials and backup snapshots.
+/deploy/
+/backups/
+*.backup
+*.before_*
+*.bak
+*.tar
+*.tar.gz
+*.zip
+*.pem
+*.key
+*.p12
+*.pfx
+*.sqlite
+*.sqlite-*

@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sherlock · расширенный поиск</title>
+<style>
+:root{color-scheme:dark;font:16px system-ui,-apple-system,sans-serif;background:#091524;color:#eef5ff}
+*{box-sizing:border-box}body{max-width:1180px;margin:0 auto;padding:20px}h1{margin:6px 0}
+a{color:#89d9ff}button,select,input,textarea{font:inherit;color:inherit;border:1px solid #415979;border-radius:10px;background:#152943;padding:11px}
+button{cursor:pointer}button:hover{border-color:#70c5ee}button:disabled{opacity:.5;cursor:default}
+button.primary{background:#086aa3;border-color:#41addf;font-weight:700}
+main{display:grid;grid-template-columns:minmax(270px,400px) 1fr;gap:18px;margin-top:20px}
+section{padding:18px;background:#102139;border:1px solid #314762;border-radius:14px;min-width:0}
+label{display:block;margin:12px 0;font-weight:600}label small{display:block;font-weight:400;color:#b2c4d9}
+input[type=text],input[type=number],textarea,select{width:100%;margin-top:6px}
+textarea{min-height:94px;resize:vertical}input[type=checkbox]{width:auto}
+.option{display:flex;gap:9px;align-items:flex-start;font-weight:400}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
+.note{color:#b2c4d9;font-size:.9rem}.error{color:#ffb6b6}
+#results{min-height:110px}#rows{max-height:62vh;overflow:auto}
+.row{padding:10px 0;border-bottom:1px solid #2a405a;overflow-wrap:anywhere}
+.row small{color:#adc6e1}#history-items{display:flex;gap:7px;flex-wrap:wrap}
+.summary{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0}.summary span{padding:7px;background:#203c59;border-radius:8px}
+.hidden{display:none!important}
+@media(max-width:760px){main{display:block}section{margin:12px 0}body{padding:10px}}
+</style></head>
+<body>
+<header><a href="/">← Telegram Monitor</a><h1>Sherlock · расширенный поиск</h1>
+<p class="note">Ручная проверка публичных username. Совпадение имени на разных площадках не подтверждает личность.</p></header>
+<main>
+<section aria-label="Настройки проверки"><h2>Новая проверка</h2>
+<form id="form">
+<label>Username (до 5, по одному в строке)<textarea id="names" required maxlength="500" placeholder="example_user&#10;example{?}"></textarea><small>Поддерживаются варианты {?} → _, - и .</small></label>
+<label>Быстро добавить сайт<input id="site-choice" type="text" list="known-sites" autocomplete="off"><datalist id="known-sites"></datalist></label>
+<button type="button" id="add-site">Добавить сайт</button>
+<label>Фильтр сайтов (необязательно, до 50)<textarea id="sites" maxlength="4500" placeholder="GitHub&#10;Reddit"></textarea><small>Один сайт в строке, как в каталоге Sherlock; пусто — все сайты.</small></label>
+<label>Тайм-аут сайта, секунд<input id="timeout" type="number" min="2" max="60" value="8"></label>
+<label>Каталог сайтов<select id="catalog"><option value="builtin">Встроенный</option></select></label>
+<label class="option"><input id="nsfw" type="checkbox"> Включить NSFW-площадки</label>
+<label class="option"><input id="exclusions" type="checkbox"> Игнорировать исключения (возможны ложные совпадения)</label>
+<label class="option"><input id="proxy" type="checkbox" disabled> Прокси, настроенный администратором</label>
+<div class="actions"><button class="primary" type="submit" id="start">Начать поиск</button><button type="button" id="history">История</button></div>
+</form>
+<p id="capabilities" class="note" aria-live="polite">Загрузка возможностей…</p>
+</section>
+<section aria-label="Результаты">
+<h2>Результаты поиска</h2><p id="status" role="status" aria-live="polite">Поиск ещё не запускался.</p>
+<div id="history-items" class="hidden"></div>
+<div id="details"></div>
+<div id="download" class="actions hidden">
+<button data-format="json">JSON</button><button data-format="csv">CSV</button><button data-format="xlsx">Excel</button><button data-format="txt">TXT</button></div>
+<div id="filter-wrap" class="hidden"><label>Статус проверки<select id="filter">
+<option value="all">Все сайты</option><option value="claimed">Найдено (claimed)</option><option value="available">Не найдено (available)</option><option value="unknown">Неизвестно</option><option value="waf">Защита WAF</option><option value="illegal">Недопустимый username</option>
+</select></label></div>
+<p id="count" class="note"></p><div id="rows" aria-live="polite"></div>
+</section></main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+let active=null,timer=null,items=[],generation=0;
+function el(tag,content,cls){const n=document.createElement(tag);if(cls)n.className=cls;n.textContent=content;return n;}
+function message(text,isError=false){$('status').textContent=text;$('status').className=isError?'error':'';}
+async function json(url,options){const r=await fetch(url,{credentials:'same-origin',cache:'no-store',...options});
+ if(!r.ok){let detail='';try{const data=await r.json();if(typeof data.detail==='string')detail=data.detail;}catch(e){}
+ throw Error('HTTP '+r.status+(detail?' · '+detail:''));}return r.json();}
+async function capabilities(){
+ try{const data=await json('/api/osint/sherlock/capabilities');
+ $('capabilities').textContent='Sherlock '+data.version+' · до '+data.max_usernames+' username · отчёты JSON/CSV/XLSX/TXT';
+ $('proxy').disabled=!data.proxy_available;
+ for(const name of data.sites||[]){
+   const option=document.createElement('option');option.value=name;$('known-sites').append(option);
+ }
+ for(const name of data.catalogs||[])if(name!=='builtin'){
+ const opt=el('option',name);opt.value=name;$('catalog').append(opt);}
+ }catch(err){$('capabilities').textContent='Расширенный сервис недоступен: '+err.message;}
+}
+function lines(id){return $(id).value.split(/[\r\n]+/).map(s=>s.trim()).filter(Boolean);}
+function reset(){++generation;clearTimeout(timer);$('rows').replaceChildren();$('details').replaceChildren();
+ $('download').classList.add('hidden');$('filter-wrap').classList.add('hidden');$('count').textContent='';
+ $('history-items').classList.add('hidden');$('history-items').replaceChildren();items=[];active=null;}
+function links(job){$('download').classList.toggle('hidden',job.state!=='done');}
+function renderRows(){const root=$('rows');root.replaceChildren();
+ const filtered=items.filter(item=>$('filter').value==='all'||item.status===$('filter').value);
+ $('count').textContent='Показано: '+filtered.length+' из '+items.length;
+ for(const item of filtered){
+ const row=el('div','','row');row.append(el('strong',item.username+' · '+item.site));
+ row.append(el('small',' · '+item.status
+ +(Number.isInteger(item.http_status)?' · HTTP '+item.http_status:'')
+ +(typeof item.response_time_s==='number'?' · '+item.response_time_s+' c':'')));
+ if(item.status==='claimed'&&/^https?:\/\//i.test(item.url||'')){
+ const link=el('a',' Открыть профиль ↗');link.href=item.url;link.target='_blank';
+ link.rel='noopener noreferrer';link.referrerPolicy='no-referrer';row.append(el('br',''),link);
+ }root.append(row);
+ }
+}
+function render(job){
+ active=job;message('Задание '+job.id+' · '+job.state+(job.error?' · '+job.error:''));
+ const info=$('details');info.replaceChildren();
+ info.append(el('p','Username: '+(job.usernames||[job.username]).join(', ')));
+ if(job.created_at)info.append(el('small','Создано: '+job.created_at));
+ if(job.finished_at)info.append(el('small',' · завершено: '+job.finished_at));
+ if(job.state==='done'){
+ const counts=el('div','','summary');
+ for(const [key,count] of Object.entries(job.summary||{}))counts.append(el('span',key+': '+count));
+ info.append(counts);
+ }
+ items=Array.isArray(job.checks)?job.checks:[];links(job);
+ $('filter-wrap').classList.toggle('hidden',!items.length);renderRows();
+ $('start').disabled=job.state==='queued'||job.state==='running';
+}
+async function poll(id,seq){try{const job=await json('/api/osint/sherlock/v2/jobs/'+id);
+ if(seq!==generation)return;render(job);
+ if(job.state==='queued'||job.state==='running')timer=setTimeout(()=>poll(id,seq),3000);
+ }catch(e){if(seq!==generation)return;message('Не удалось получить статус: '+e.message,true);$('start').disabled=false;}}
+$('add-site').addEventListener('click',()=>{
+ const choice=$('site-choice').value.trim();if(!choice)return;
+ const existing=lines('sites');if(!existing.includes(choice))existing.push(choice);
+ $('sites').value=existing.join('\n');$('site-choice').value='';
+});
+$('form').addEventListener('submit',async e=>{
+ e.preventDefault();const usernames=lines('names'),sites=lines('sites');
+ if(usernames.length<1||usernames.length>5){message('Нужно от 1 до 5 username',true);return;}
+ if(sites.length>50){message('Не более 50 сайтов',true);return;}
+ const req={usernames,sites,timeout:Number($('timeout').value),
+ include_nsfw:$('nsfw').checked,ignore_exclusions:$('exclusions').checked,
+ use_proxy:$('proxy').checked,catalog:$('catalog').value};
+ reset();$('start').disabled=true;message('Отправка задания…');
+ try{const job=await json('/api/osint/sherlock/v2/jobs',{method:'POST',
+ headers:{'content-type':'application/json','x-tm-action':'1'},body:JSON.stringify(req)});
+ render(job);const seq=generation;if(job.state==='queued'||job.state==='running')timer=setTimeout(()=>poll(job.id,seq),1500);
+ }catch(err){$('start').disabled=false;message('Ошибка запуска: '+err.message,true);}
+});
+$('history').addEventListener('click',async()=>{
+ reset();$('start').disabled=false;
+ try{const response=await json('/api/osint/sherlock/v2/recent');
+ const list=$('history-items');list.classList.remove('hidden');
+ for(const job of response.items||[]){
+ const button=el('button',(job.usernames||[job.username]).join(', ')+' · '+job.state);
+ button.type='button';button.addEventListener('click',()=>{reset();poll(job.id,generation);});
+ list.append(button);
+ }message(list.childElementCount?'История проверок':'История пуста');
+ }catch(err){message('История недоступна: '+err.message,true);}
+});
+$('filter').addEventListener('change',renderRows);
+$('download').addEventListener('click',async e=>{
+ const fmt=e.target.dataset.format;if(!fmt||!active||active.state!=='done')return;
+ const button=e.target;button.disabled=true;
+ try{const response=await fetch('/api/osint/sherlock/v2/jobs/'+active.id+'/export?format='+fmt,{credentials:'same-origin',cache:'no-store'});
+ if(!response.ok)throw Error('HTTP '+response.status);
+ const blob=await response.blob(),url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='sherlock-'+active.id+'.'+fmt;a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);
+ }catch(err){message('Экспорт не удался: '+err.message,true);}
+ finally{button.disabled=false;}
+});
+capabilities();
+</script></body></html>

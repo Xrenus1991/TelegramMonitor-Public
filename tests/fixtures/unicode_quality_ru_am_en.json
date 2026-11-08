@@ -1,0 +1,170 @@
+[
+  {
+    "id": "mixed-latin",
+    "input": "Гpaницa",
+    "expected": "граница",
+    "positive": true,
+    "group": "baseline"
+  },
+  {
+    "id": "latin-o",
+    "input": "пoжар",
+    "expected": "пожар",
+    "positive": true,
+    "group": "baseline"
+  },
+  {
+    "id": "latin-a",
+    "input": "пожaр",
+    "expected": "пожар",
+    "positive": true,
+    "group": "baseline"
+  },
+  {
+    "id": "greek-o",
+    "input": "угрοза",
+    "expected": "угроза",
+    "positive": true,
+    "group": "baseline"
+  },
+  {
+    "id": "latin-p",
+    "input": "взpыв",
+    "expected": "взрыв",
+    "positive": true,
+    "group": "baseline"
+  },
+  {
+    "id": "place",
+    "input": "еpеван",
+    "expected": "ереван",
+    "positive": true,
+    "group": "baseline"
+  },
+  {
+    "id": "mixed-word",
+    "input": "пpoтест",
+    "expected": "протест",
+    "positive": true,
+    "group": "baseline"
+  },
+  {
+    "id": "zwsp",
+    "input": "гра​ница",
+    "expected": "граница",
+    "positive": true,
+    "group": "baseline"
+  },
+  {
+    "id": "wordjoiner",
+    "input": "гра⁠ница",
+    "expected": "граница",
+    "positive": true,
+    "group": "baseline"
+  },
+  {
+    "id": "bom",
+    "input": "гра﻿ница",
+    "expected": "граница",
+    "positive": true,
+    "group": "baseline"
+  },
+  {
+    "id": "ru",
+    "input": "Пожар в Ереване",
+    "expected": "Пожар в Ереване",
+    "positive": false,
+    "group": "baseline"
+  },
+  {
+    "id": "arm",
+    "input": "Երևան Հայաստան հայերեն",
+    "expected": "Երևան Հայաստան հայերեն",
+    "positive": false,
+    "group": "baseline"
+  },
+  {
+    "id": "en",
+    "input": "Python API OpenAI protest",
+    "expected": "Python API OpenAI protest",
+    "positive": false,
+    "group": "baseline"
+  },
+  {
+    "id": "mixed-legitimate",
+    "input": "macОС модель API",
+    "expected": "macОС модель API",
+    "positive": false,
+    "group": "baseline"
+  },
+  {
+    "id": "arm-zwj",
+    "input": "հայ‍երեն",
+    "expected": "հայ‍երեն",
+    "positive": false,
+    "group": "baseline"
+  },
+  {
+    "id": "arm-zwnj",
+    "input": "հայ‌երեն",
+    "expected": "հայ‌երեն",
+    "positive": false,
+    "group": "baseline"
+  },
+  {
+    "id": "url",
+    "input": "https://example.org/пoжар",
+    "expected": "https://example.org/пoжар",
+    "positive": false,
+    "group": "baseline"
+  },
+  {
+    "id": "email",
+    "input": "пoжар@example.com",
+    "expected": "пoжар@example.com",
+    "positive": false,
+    "group": "baseline"
+  },
+  {
+    "id": "handle",
+    "input": "@пoжар",
+    "expected": "@пoжар",
+    "positive": false,
+    "group": "baseline"
+  },
+  {
+    "id": "domain",
+    "input": "Гpaницa.com",
+    "expected": "Гpaницa.com",
+    "positive": false,
+    "group": "baseline"
+  },
+  {
+    "id": "unknown-word",
+    "input": "cлoвo",
+    "expected": "cлoвo",
+    "positive": false,
+    "group": "baseline"
+  },
+  {
+    "id": "numbers",
+    "input": "2026-11-06 +37400000000",
+    "expected": "2026-11-06 +37400000000",
+    "positive": false,
+    "group": "baseline"
+  },
+  {
+    "id": "identifier-underscore",
+    "input": "пoжар_2026",
+    "expected": "пoжар_2026",
+    "positive": false,
+    "group": "baseline"
+  },
+  {
+    "id": "urn-identifier",
+    "input": "urn:пoжар",
+    "expected": "urn:пoжар",
+    "positive": false,
+    "group": "baseline"
+  }
+]
