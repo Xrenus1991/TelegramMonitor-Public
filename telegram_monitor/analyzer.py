@@ -224,6 +224,7 @@ class MessageAnalyzer:
         chunk_budget = int(os.environ.get("AI_MAX_CHARS_PER_CHUNK", "16000" if provider == "openai" else "6000"))
         cap = min(max_message_chars, max(200, chunk_budget - 300))
         redact_contacts = provider == "openai" and should_redact_contacts()
+        source_cache = {}
         for msg in messages:
             counts[msg.channel_name] = counts.get(msg.channel_name, 0) + 1
             original = str(msg.text or "")
@@ -236,7 +237,9 @@ class MessageAnalyzer:
                                   for ch in str(msg.channel_name)[:200])
             if redact_contacts:
                 content = mask_contacts(content)
-                source_name = mask_contacts(source_name)
+                if source_name not in source_cache:
+                    source_cache[source_name] = mask_contacts(source_name)
+                source_name = source_cache[source_name]
             # Detect script mixing only in the bounded, privacy-processed content.
             # A signal is not a verdict; preserve the exact text for the model.
             mixed_tokens = mixed_latin_cyrillic_tokens(content)
