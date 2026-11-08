@@ -47,3 +47,13 @@ def test_invisible_format_characters_alone_are_not_suspicious():
 def test_invalid_input_rejected():
     with pytest.raises(TypeError):
         mixed_latin_cyrillic_tokens(None)
+
+
+@pytest.mark.parametrize(("text", "expected"), [
+    ("прив𝒆т", ["прив𝒆т"]),
+    ("с𝗮йт", ["с𝗮йт"]),
+    ("𝒉𝒆𝒍𝒍𝒐", []),
+    ("привет", []),
+])
+def test_compatibility_styled_latin_letters(text, expected):
+    assert mixed_latin_cyrillic_tokens(text) == expected
