@@ -57,3 +57,30 @@ async def test_mixed_script_signal_is_bounded(monkeypatch):
     assert len(captured) == 1
     # Tokens are separated by digits, so the repeated mixed token is deduplicated.
     assert '"mixed_script_tokens": ["аb"]' in captured[0]
+
+
+
+@pytest.mark.asyncio
+async def test_long_mixed_script_signal_is_truncated_but_content_preserved(monkeypatch):
+    monkeypatch.setenv("AI_PROVIDER", "ollama")
+    analyzer = MessageAnalyzer(["test"])
+    prompts = []
+
+    async def capture(prompt):
+        prompts.append(prompt)
+        return None
+
+    analyzer._call_claude = capture
+    original = "а" + "b" * 500
+    msg = SimpleNamespace(
+        text=original,
+        channel_name="test",
+        timestamp=datetime.now(timezone.utc),
+        message_id=44,
+        media_type=None,
+        media_size_kb=0,
+    )
+    await analyzer._analyze_one_chunk([msg])
+    assert len(prompts) == 1
+    assert '"mixed_script_tokens": ["' + original[:80] + '"]' in prompts[0]
+    assert '"content": "' + original + '"' in prompts[0]
