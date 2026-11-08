@@ -252,7 +252,8 @@ class MessageAnalyzer:
                                else str(getattr(msg, "message_id", "") or "")[:64]),
                 "media_type": "".join(" " if ord(ch) < 32 or ord(ch) == 127 else ch
                                       for ch in str(msg.media_type or "")[:80]),
-                "media_size_kb": int(msg.media_size_kb or 0),
+                "media_size_kb": (int(msg.media_size_kb or 0) if str(msg.media_size_kb or "0").isascii() and str(msg.media_size_kb or "0").isdecimal()
+                                  else 0),
                 "content": content,
                 # Signals are supplemental metadata: bound their total size,
                 # even when a single suspicious token is thousands of chars.
