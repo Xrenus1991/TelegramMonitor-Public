@@ -245,6 +245,9 @@ class MessageAnalyzer:
             stamp = msg.timestamp
             if stamp.tzinfo is None:
                 stamp = stamp.replace(tzinfo=timezone.utc)
+            media_size_text = str(msg.media_size_kb or "0")
+            media_size_kb = (int(media_size_text) if len(media_size_text) <= 12
+                             and media_size_text.isascii() and media_size_text.isdecimal() else 0)
             msg_lines.append(json.dumps({
                 "time_utc": stamp.astimezone(timezone.utc).isoformat(),
                 "source": source_name,
@@ -252,8 +255,7 @@ class MessageAnalyzer:
                                else str(getattr(msg, "message_id", "") or "")[:64]),
                 "media_type": "".join(" " if ord(ch) < 32 or ord(ch) == 127 else ch
                                       for ch in str(msg.media_type or "")[:80]),
-                "media_size_kb": (int(msg.media_size_kb or 0) if len(str(msg.media_size_kb or "0")) <= 12 and str(msg.media_size_kb or "0").isascii() and str(msg.media_size_kb or "0").isdecimal()
-                                  else 0),
+                "media_size_kb": media_size_kb,
                 "content": content,
                 # Signals are supplemental metadata: bound their total size,
                 # even when a single suspicious token is thousands of chars.
