@@ -10,6 +10,7 @@ import os
 import re
 from datetime import datetime, timezone
 from .settings import Settings
+from telegram_monitor.mixed_script import mixed_latin_cyrillic_tokens
 from .db import Store
 
 log = logging.getLogger("cloud.worker")
@@ -84,6 +85,8 @@ def pack(rows, max_chars):
             "source": redact(str(r.get("channel_name", ""))),
             "timestamp": stamp,
             "text": redact(original[:max_chars]),
+            # A review hint only; never treat mixed scripts as proof of intent.
+            "mixed_script_detected": bool(mixed_latin_cyrillic_tokens(original[:max_chars])),
             "truncated": len(original) > max_chars,
         })
     return json.dumps(output, ensure_ascii=False)
